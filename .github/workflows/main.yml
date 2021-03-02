@@ -21,7 +21,20 @@ jobs:
       - name: Markup Link Checker (mlc)
         uses: becheran/mlc@v0.14.0
         with:
-          args: -d          
+          args: -d
+  coverage:    
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.16'
+      - name: Run coverage
+        run: go test -race -coverprofile=coverage.txt -covermode=atomic
+      - name: Upload coverage to Codecov
+        run: bash <(curl -s https://codecov.io/bash)
   test-and-release:
     runs-on: ubuntu-latest
     needs: [check-links]
