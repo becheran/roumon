@@ -26,7 +26,41 @@ TODO
 
 ## Usage
 
-TODO
+The program which shall be monitored needs to run a [pprof server](https://golang.org/pkg/net/http/pprof/).
+
+Import pprof into you program:
+
+``` go
+import _ "net/http/pprof"
+```
+
+Run a webserver which will listen on a specific port:
+
+``` go
+go func() {
+    log.Println(http.ListenAndServe("localhost:6060", nil))
+}()
+```
+
+Start your program and check that the `pprof` site is available in you web-browser:  `http://localhost:6060/debug/pprof`
+
+Start *roumon* in from your command line interface. Use optional arguments if needed.
+
+For example `roumon -debug=logfile -host=192.168.10.1 -port=8081` will start the routine monitor for the *pprof profiles* exposed to `192.168.10.1:8081` and write a debug logfile to `./logfile`.
+
+Run *roumon* with `-h` or `--help` to see all commandline argument options:
+
+``` txt
+Usage of roumon:
+  -debug string
+        Path to debug file 
+  -host string
+        The pprof server IP or hostname (default "localhost")
+  -port int
+        The pprof server port (default 6060)
+```
+
+From within the *Terminal User Interface (TUI)* hit `F1` for help `F10` or `ctrl-c` to stop the application.
 
 ## Contributing
 
