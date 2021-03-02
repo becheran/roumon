@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 
@@ -11,28 +13,30 @@ import (
 )
 
 func main() {
-	var logFile string
 	var host string
+	var dbgFile string
 	var port int
-	flag.StringVar(&logFile, "log", "", "Path to logfile")
-	flag.StringVar(&host, "host", "localhost", "The pprof server IP or hostname. Default is 'localhost'")
-	flag.IntVar(&port, "port", 6060, "The pprof server port. Default is 6060")
+	flag.StringVar(&host, "host", "localhost", "The pprof server IP or hostname")
+	flag.IntVar(&port, "port", 6060, "The pprof server port")
+	flag.StringVar(&dbgFile, "debug", "", "Path to debug file")
 	flag.Parse()
 
-	if len(logFile) > 0 {
-		f, err := os.OpenFile(logFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if len(dbgFile) > 0 {
+		f, err := os.OpenFile(dbgFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
 			log.Fatalf("error opening file: %v", err)
 		}
 		defer f.Close()
 		log.SetOutput(f)
+	} else {
+		log.SetOutput(ioutil.Discard)
 	}
 
 	log.Print("Start")
 
 	c := client.NewClient(host, port)
 	ui := ui.NewUI()
-	defer ui.Stop()
+
 	terminate := make(chan error)
 
 	routinesUpdate := make(chan []model.Goroutine)
@@ -40,9 +44,11 @@ func main() {
 	go ui.Run(terminate, routinesUpdate)
 
 	err := <-terminate
+	ui.Stop()
 
 	if err != nil {
-		log.Printf("Error: %s\n", err.Error())
+		fmt.Println(err.Error())
+		log.Printf(err.Error())
 	}
 
 	log.Print("Stopped")
