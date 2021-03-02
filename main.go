@@ -3,10 +3,6 @@ package main
 import (
 	"flag"
 	"log"
-
-	// TODO: Remove for production
-	"net/http"
-	_ "net/http/pprof"
 	"os"
 
 	"github.com/becheran/roumon/internal/client"
@@ -15,11 +11,6 @@ import (
 )
 
 func main() {
-	// TODO: Remove for production
-	go func() {
-		log.Println(http.ListenAndServe("localhost:6061", nil))
-	}()
-
 	var logFile string
 	var host string
 	var port int
