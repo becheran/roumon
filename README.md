@@ -18,13 +18,22 @@ A go**rou**tine **mon**itor to keep track of active routines from within your fa
 
 ## Features
 
-TODO
+* Track live state of all active goroutines
+* Terminal user interface written with [termui](https://github.com/gizak/termui) 🤓
+* Simple to integrate [pprof server](https://golang.org/pkg/net/http/pprof/) for live monitoring
+* Dynamic history of goroutine count
+* Full-text filtering
+* Overview of routine states
 
 ## Installation
 
-TODO
+Download the pre-compiled binaries from the [releases page](https://github.com/becheran/roumon/releases).
 
 ## Usage
+
+Before starting roumon, the go app which shall be monitored needs to be prepared to export pprof infos via http.
+
+### pprof
 
 The program which shall be monitored needs to run a [pprof server](https://golang.org/pkg/net/http/pprof/).
 
@@ -43,6 +52,8 @@ go func() {
 ```
 
 Start your program and check that the `pprof` site is available in you web-browser:  `http://localhost:6060/debug/pprof`
+
+### roumon
 
 Start *roumon* in from your command line interface. Use optional arguments if needed.
 
