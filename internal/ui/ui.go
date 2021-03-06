@@ -225,9 +225,13 @@ func (ui *UI) updateList() {
 		ui.list.Title = "Routines (0/0)"
 		return
 	}
+
 	if ui.list.SelectedRow >= len(ui.filteredData) {
 		ui.list.SelectedRow = len(ui.filteredData) - 1
+	} else if ui.list.SelectedRow < 0 {
+		ui.list.SelectedRow = 0
 	}
+
 	selectedData := ui.filteredData[ui.list.SelectedRow]
 	trace := ""
 	for _, t := range selectedData.StackTrace {
