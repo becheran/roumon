@@ -25,7 +25,11 @@ type UI struct {
 	routineHist    *widgets.Plot
 	barchart       *widgets.BarChart
 	barchartLegend *widgets.Paragraph
+	paused         *widgets.Paragraph
+	legend         *widgets.Paragraph
+	help           *widgets.Paragraph
 
+	grid         *termui.Grid
 	filtered     bool
 	origData     []model.Goroutine
 	filteredData []model.Goroutine
@@ -97,6 +101,29 @@ func NewUI() *UI {
 	barchartLabel.PaddingBottom = padding
 	barchartLabel.Text = ""
 
+	help := widgets.NewParagraph()
+	help.TextStyle.Fg = termui.ColorGreen
+	help.Text = "Help\n\nArrows up/down: Select from list\nText input: Filter results\nF10: Quit\nF2: Pause\n\nPress any key to continue"
+	help.PaddingBottom = 2
+	help.PaddingLeft = 2
+	help.PaddingRight = 2
+	help.PaddingTop = 2
+
+	paused := widgets.NewParagraph()
+	paused.TextStyle.Fg = termui.ColorGreen
+	paused.Text = "Paused. Press any key to continue"
+	paused.PaddingBottom = 2
+	paused.PaddingLeft = 2
+	paused.PaddingRight = 2
+	paused.PaddingTop = 2
+
+	legend := widgets.NewParagraph()
+	legend.Text = "F1 Help | F2 Pause | F10 Quit"
+	legend.TextStyle.Fg = termui.ColorGreen
+	legend.Border = false
+
+	grid := termui.NewGrid()
+
 	ui := UI{
 		filter:         filter,
 		list:           routineList,
@@ -104,9 +131,26 @@ func NewUI() *UI {
 		routineHist:    plot,
 		barchart:       barchart,
 		barchartLegend: barchartLabel,
+		help:           help,
+		paused:         paused,
+		legend:         legend,
+		grid:           grid,
 	}
 
-	ui.updateList()
+	grid.Set(
+		termui.NewRow(3.0/10,
+			termui.NewCol(3.0/10,
+				termui.NewCol(5.0/8, ui.barchart),
+				termui.NewCol(3.0/8, ui.barchartLegend)),
+			termui.NewCol(7.0/10, ui.routineHist),
+		),
+		termui.NewRow(7.0/10,
+			termui.NewCol(1.0/6,
+				termui.NewRow(1.5/10, ui.filter),
+				termui.NewRow(8.5/10, ui.list)),
+			termui.NewCol(5.0/6, ui.details),
+		),
+	)
 
 	return &ui
 }
@@ -208,147 +252,47 @@ func (ui *UI) updateList() {
 	ui.list.Title = fmt.Sprintf("Routines (%d/%d)", ui.list.SelectedRow+1, len(ui.list.Rows))
 }
 
+// Stop UI and close all event listeners
 func (ui *UI) Stop() {
 	termui.Close()
 }
 
+func (ui *UI) resize(width, height int) {
+	log.Printf("Resize to: (%d,%d)", width, height)
+	ui.paused.SetRect(width/2.0-25, height/4.0-4, width/2.0+25, height/4.0+4)
+	ui.help.SetRect(width/2.0-20, height/4.0-10, width/2.0+20, height/4.0+10)
+	ui.legend.SetRect(width-35, height-4, width-1, height-1)
+	ui.grid.SetRect(0, 0, width, height)
+}
+
+// Run UI in fullscreen mode
 func (ui *UI) Run(terminate chan<- error, routinesUpdate <-chan []model.Goroutine) {
-	grid := termui.NewGrid()
-
-	paused := widgets.NewParagraph()
-	paused.TextStyle.Fg = termui.ColorGreen
-	paused.Text = "Paused. Press F2 to continue"
-	paused.PaddingBottom = 2
-	paused.PaddingLeft = 2
-	paused.PaddingRight = 2
-	paused.PaddingTop = 2
-
-	help := widgets.NewParagraph()
-	help.TextStyle.Fg = termui.ColorGreen
-	help.Text = "Help\n\nArrows up/down: Select from list\nText input: Filter results\nF10: Quit\nF2: Pause\n\nPress any key to continue"
-	help.PaddingBottom = 2
-	help.PaddingLeft = 2
-	help.PaddingRight = 2
-	help.PaddingTop = 2
-
-	legend := widgets.NewParagraph()
-	legend.Text = "F1 Help | F2 Pause | F10 Quit"
-	legend.TextStyle.Fg = termui.ColorGreen
-	legend.Border = false
-
-	grid.Set(
-		termui.NewRow(3.0/10,
-			termui.NewCol(3.0/10,
-				termui.NewCol(5.0/8, ui.barchart),
-				termui.NewCol(3.0/8, ui.barchartLegend)),
-			termui.NewCol(7.0/10, ui.routineHist),
-		),
-		termui.NewRow(7.0/10,
-			termui.NewCol(1.0/6,
-				termui.NewRow(1.5/10, ui.filter),
-				termui.NewRow(8.5/10, ui.list)),
-			termui.NewCol(5.0/6, ui.details),
-		),
-	)
-
-	resize := func(width, height int) {
-		log.Printf("Resize to: (%d,%d)", width, height)
-		paused.SetRect(width/2.0-17, height/4.0-4, width/2.0+17, height/4.0+4)
-		help.SetRect(width/2.0-20, height/4.0-10, width/2.0+20, height/4.0+10)
-		legend.SetRect(width-35, height-4, width-1, height-1)
-		grid.SetRect(0, 0, width, height)
-	}
+	ui.updateList()
 
 	termWidth, termHeight := termui.TerminalDimensions()
-	resize(termWidth, termHeight)
+	ui.resize(termWidth, termHeight)
 
-	termui.Render(grid, legend)
+	termui.Render(ui.grid, ui.legend)
 
 	pollEvents := termui.PollEvents()
-loop:
 	for {
 		select {
 		case evt := <-pollEvents:
-			if evt.Type == termui.MouseEvent {
-				continue loop
-			} else if evt.Type == termui.ResizeEvent {
+			switch evt.Type {
+			case termui.MouseEvent:
+				continue
+			case termui.ResizeEvent:
 				resized, ok := evt.Payload.(termui.Resize)
 				if !ok {
 					log.Printf("Failed to parse payload for resize. %v", evt)
-					continue loop
+				} else {
+					ui.resize(resized.Width, resized.Height)
 				}
-				resize(resized.Width, resized.Height)
-			} else {
-				// Handle keyboard events
-				switch evt.ID {
-				case "<C-c>", "<F10>":
-					terminate <- nil
-					return
-				case "<F1>":
-					termui.Render(grid, legend, help)
-					e := <-termui.PollEvents()
-					if e.ID == "<C-c>" || e.ID == "<F10>" {
-						terminate <- nil
-						return
-					}
-				case "<F2>":
-					// Pause
-					termui.Render(grid, legend, paused)
-				paused:
-					for {
-						e := <-termui.PollEvents()
-						switch e.ID {
-						case "<F2>":
-							break paused
-						case "<C-c>", "<F10>":
-							terminate <- nil
-							return
-						}
-					}
-				case "<Down>":
-					ui.list.ScrollDown()
-					ui.updateList()
-				case "<Up>":
-					ui.list.ScrollUp()
-					ui.updateList()
-				case "<PageDown>":
-					ui.list.ScrollPageDown()
-					ui.updateList()
-				case "<PageUp>":
-					ui.list.ScrollPageUp()
-					ui.updateList()
-				case "<Home>":
-					ui.list.ScrollTop()
-					ui.updateList()
-				case "<End>":
-					ui.list.ScrollBottom()
-					ui.updateList()
-				case "<Backspace>", "<C-<Backspace>>":
-					if len(ui.filter.Text) > 0 {
-						ui.filter.Text = ui.filter.Text[:len(ui.filter.Text)-1]
-					}
-				case "<Space>":
-					if !ui.filtered {
-						ui.filter.Text = ""
-					}
-					ui.filtered = true
-					ui.filter.Text += " "
-					ui.updateList()
-				default:
-					// < sign
-					if evt.ID[0] != 0x3C {
-						if !ui.filtered {
-							ui.filter.Text = ""
-						}
-						ui.filtered = true
-						ui.filter.Text += evt.ID
-					}
-					ui.updateList()
-				}
-
+			case termui.KeyboardEvent:
+				ui.handleKeyEvent(evt.ID, terminate, pollEvents)
 			}
 		case routines := <-routinesUpdate:
-			// Hacky, but the length is needed here!
+			// History data size cannot be limited in termui. This is a workaround
 			var keepRoutineHist = (ui.routineHist.Dx() - 10) >> 1
 			ui.origData = routines
 			if len(ui.routineHist.Data[0]) >= keepRoutineHist {
@@ -360,6 +304,70 @@ loop:
 			ui.updateStatus()
 		}
 
-		termui.Render(grid, legend)
+		termui.Render(ui.grid, ui.legend)
+	}
+}
+
+func (ui *UI) handleKeyEvent(keyID string, terminate chan<- error, pollEvents <-chan termui.Event) {
+	switch keyID {
+	case "<C-c>", "<F10>":
+		terminate <- nil
+		return
+	case "<F1>":
+		termui.Render(ui.grid, ui.legend, ui.help)
+		e := <-pollEvents
+		if e.ID == "<C-c>" || e.ID == "<F10>" {
+			terminate <- nil
+			return
+		}
+		termui.Render(ui.grid, ui.legend)
+	case "<F2>":
+		// Pause
+		termui.Render(ui.grid, ui.legend, ui.paused)
+		e := <-pollEvents
+		if e.ID == "<C-c>" || e.ID == "<F10>" {
+			terminate <- nil
+			return
+		}
+		termui.Render(ui.grid, ui.legend)
+	case "<Down>":
+		ui.list.ScrollDown()
+		ui.updateList()
+	case "<Up>":
+		ui.list.ScrollUp()
+		ui.updateList()
+	case "<PageDown>":
+		ui.list.ScrollPageDown()
+		ui.updateList()
+	case "<PageUp>":
+		ui.list.ScrollPageUp()
+		ui.updateList()
+	case "<Home>":
+		ui.list.ScrollTop()
+		ui.updateList()
+	case "<End>":
+		ui.list.ScrollBottom()
+		ui.updateList()
+	case "<Backspace>", "<C-<Backspace>>":
+		if len(ui.filter.Text) > 0 {
+			ui.filter.Text = ui.filter.Text[:len(ui.filter.Text)-1]
+		}
+	case "<Space>":
+		if !ui.filtered {
+			ui.filter.Text = ""
+		}
+		ui.filtered = true
+		ui.filter.Text += " "
+		ui.updateList()
+	default:
+		// < sign
+		if keyID[0] != 0x3C {
+			if !ui.filtered {
+				ui.filter.Text = ""
+			}
+			ui.filtered = true
+			ui.filter.Text += keyID
+		}
+		ui.updateList()
 	}
 }
