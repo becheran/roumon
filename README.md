@@ -27,7 +27,11 @@ A go**rou**tine **mon**itor to keep track of active routines from within your fa
 
 ## Installation
 
-Download the pre-compiled binaries from the [releases page](https://github.com/becheran/roumon/releases).
+```sh
+go get github.com/becheran/roumon
+```
+
+Or download the pre-compiled binaries from the [releases page](https://github.com/becheran/roumon/releases).
 
 ## Usage
 
