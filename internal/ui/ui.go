@@ -221,6 +221,7 @@ func (ui *UI) updateList() {
 	ui.list.Rows = routineList
 
 	if len(ui.filteredData) == 0 {
+		ui.list.SelectedRow = 0
 		ui.details.Text = ""
 		ui.list.Title = "Routines (0/0)"
 		return
