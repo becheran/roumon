@@ -46,12 +46,8 @@ func (s StackFrame) String() string {
 }
 
 // For example /usr/local/go/src/net/http/server.go:2969 +0x970
-func parseStackPos(scanner *bufio.Scanner) (fileName string, line int32, pos *int, err error) {
-	if !scanner.Scan() {
-		err = fmt.Errorf("Unexpected end of file")
-		return
-	}
-	text := strings.TrimSpace(scanner.Text())
+func ParseStackPos(text string) (fileName string, line int32, pos *int, err error) {
+	text = strings.TrimSpace(text)
 
 	if len(text) == 0 {
 		err = fmt.Errorf("Unexpected empty line")
@@ -168,7 +164,12 @@ func ParseStackFrame(reader io.Reader) (routines []Goroutine, err error) {
 			}
 
 			if strings.HasPrefix(traceLine, "created by ") {
-				file, line, pos, err := parseStackPos(scanner)
+				if !scanner.Scan() {
+					err = fmt.Errorf("Unexpected end of file")
+					continue
+				}
+
+				file, line, pos, err := ParseStackPos(scanner.Text())
 				if err != nil {
 					log.Printf("Failed to parse created by stack. Err: %s", err.Error())
 					continue
@@ -180,7 +181,11 @@ func ParseStackFrame(reader io.Reader) (routines []Goroutine, err error) {
 					Position: pos,
 				}
 			} else {
-				file, line, pos, err := parseStackPos(scanner)
+				if !scanner.Scan() {
+					err = fmt.Errorf("Unexpected end of file")
+					continue
+				}
+				file, line, pos, err := ParseStackPos(scanner.Text())
 				if err != nil {
 					log.Printf("Failed to parse stack. Err: %s", err.Error())
 					continue

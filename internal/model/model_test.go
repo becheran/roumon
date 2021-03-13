@@ -140,6 +140,29 @@ func TestParseLockedToThread(t *testing.T) {
 	assert.True(t, r0.LockedToThread)
 }
 
+func Benchmark_ParseStackPos(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		model.ParseStackPos("C:/Program Files/Go/src/runtime/syscall_windows.go:356 +0xf2")
+	}
+}
+
+func Test_ParseStackPos_Invalid(t *testing.T) {
+	_, _, _, err := model.ParseStackPos("C:/Program Files/Go/src/runtime/syscall_windows.go:356 f+0xf2")
+	assert.NotNil(t, err)
+	_, _, _, err = model.ParseStackPos("")
+	assert.NotNil(t, err)
+}
+
+func Test_ParseStackPos_Valid(t *testing.T) {
+	fileName, line, pos, err := model.ParseStackPos("C:/Program Files/Go/src/runtime/syscall_windows.go:356 +0xf2")
+	assert.Nil(t, err)
+	assert.Equal(t, "C:/Program Files/Go/src/runtime/syscall_windows.go", fileName)
+	assert.Equal(t, int32(356), line)
+	assert.Equal(t, 0xf2, *pos)
+}
+
+///usr/local/go/src/net/http/server.go:2969 +0x970
+
 func Benchmark_ParseHeader(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		model.ParseHeader("goroutine 268 [runnable, locked to thread]:")
