@@ -88,49 +88,56 @@ func parseStackPos(scanner *bufio.Scanner) (fileName string, line int32, pos *in
 	return
 }
 
-// parseHeader of stack trace. See: https://golang.org/src/runtime/traceback.go?s=30186:30213#L869
-func parseHeader(header string) (routine Goroutine, err error) {
-	routineHeader := strings.Split(header, " ")
-	if len(routineHeader) < 3 {
-		err = fmt.Errorf("Expected header with len >= 3, but got: %s", routineHeader)
+// ParseHeader of stack trace. See: https://golang.org/src/runtime/traceback.go?s=30186:30213#L869
+func ParseHeader(header string) (routine Goroutine, err error) {
+	if len(header) < 10 {
+		err = fmt.Errorf("Expected header to begin with \"goroutine \" but len was < 10")
 		return
 	}
-	if routineHeader[0] != "goroutine" {
-		err = fmt.Errorf("Expected goroutine header, but got: %s", routineHeader)
+	if header[0:10] != "goroutine " {
+		err = fmt.Errorf("Expected goroutine header, but got: %s", header[0:10])
 		return
 	}
-	id, parseErr := strconv.ParseInt(routineHeader[1], 10, 64)
+	seperator := strings.Index(header[10:], " ")
+
+	id, parseErr := strconv.ParseInt(header[10:10+seperator], 10, 64)
 	if parseErr != nil {
 		err = fmt.Errorf("Could not parse ID. Err: %s", parseErr.Error())
 		return
 	}
 
-	stateStartIdx := strings.Index(header, "[")
 	// Remove []:
-	fullState := header[stateStartIdx+1 : len(header)-2]
-	stateParts := strings.Split(fullState, ",")
+	fullState := header[12+seperator : len(header)-1]
+	firstComma := strings.Index(fullState, ",")
 	var status string
 	lockedToThread := false
 	waitTimeMin := int64(0)
-	if len(stateParts) == 1 {
+	if firstComma < 0 {
 		status = fullState
 	} else {
-		status = stateParts[0]
-		for idx := 1; idx < len(stateParts); idx++ {
-			part := strings.Trim(stateParts[idx], " ")
-			if strings.HasSuffix(part, "minutes") {
+		status = fullState[:firstComma]
+
+		parseWaitBlock := func(part string) {
+			if part == "locked to thread" {
+				lockedToThread = true
+			} else {
 				minUnitSep := strings.Index(part, " ")
 				waitTimeMin, parseErr = strconv.ParseInt(part[:minUnitSep], 10, 64)
 				if parseErr != nil {
 					err = fmt.Errorf("Failed to parse minutes. Err: %s", parseErr.Error())
 					return
 				}
-			} else if part == "locked to thread" {
-				lockedToThread = true
 			}
 		}
-	}
 
+		sndComma := strings.Index(fullState[firstComma+1:], ",")
+		if sndComma > 0 {
+			parseWaitBlock(fullState[firstComma+2 : firstComma+sndComma+1])
+			parseWaitBlock(fullState[firstComma+sndComma+3:])
+		} else {
+			parseWaitBlock(fullState[firstComma+2:])
+		}
+	}
 	routine = Goroutine{
 		Status:         status,
 		ID:             id,
@@ -146,7 +153,7 @@ func ParseStackFrame(reader io.Reader) (routines []Goroutine, err error) {
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		routine, err := parseHeader(line)
+		routine, err := ParseHeader(line)
 		if err != nil {
 			log.Printf("Failed to parse routine header. Err: %s", err.Error())
 			continue

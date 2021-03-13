@@ -114,6 +114,12 @@ func TestParseTrace(t *testing.T) {
 	assert.False(t, r3.LockedToThread)
 }
 
+func Benchmark_ParseTrace(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		model.ParseStackFrame(strings.NewReader(trace_1))
+	}
+}
+
 var trace_2 = `goroutine 268 [runnable, locked to thread]:
 syscall.Syscall9(0x7ff9af9b0500, 0x7, 0x1f4, 0xc0000902d8, 0x1, 0xc0000902c8, 0xc000090348, 0xc000090298, 0x0, 0x0, ...)
 	C:/Program Files/Go/src/runtime/syscall_windows.go:356 +0xf2
@@ -132,4 +138,41 @@ func TestParseLockedToThread(t *testing.T) {
 	assert.Equal(t, "runnable", r0.Status)
 	assert.Equal(t, int64(0), r0.WaitSinceMin)
 	assert.True(t, r0.LockedToThread)
+}
+
+func Benchmark_ParseHeader(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		model.ParseHeader("goroutine 268 [runnable, locked to thread]")
+	}
+}
+
+func Test_ParseHeader_Invalid(t *testing.T) {
+	_, err := model.ParseHeader("")
+	assert.NotNil(t, err)
+	_, err = model.ParseHeader("gogogogogoroutines")
+	assert.NotNil(t, err)
+	_, err = model.ParseHeader("goroutine0fd")
+	assert.NotNil(t, err)
+}
+
+func Test_ParseHeader_Valid(t *testing.T) {
+	result, err := model.ParseHeader("goroutine 268 [runnable, locked to thread]")
+	assert.Nil(t, err)
+	assert.Equal(t, int64(268), result.ID)
+	assert.Equal(t, "runnable", result.Status)
+	assert.Equal(t, true, result.LockedToThread)
+
+	result, err = model.ParseHeader("goroutine 1 [chan receive, 16 minutes]")
+	assert.Nil(t, err)
+	assert.Equal(t, int64(1), result.ID)
+	assert.Equal(t, "chan receive", result.Status)
+	assert.Equal(t, int64(16), result.WaitSinceMin)
+	assert.Equal(t, false, result.LockedToThread)
+
+	result, err = model.ParseHeader("goroutine 1 [chan receive, 16 minutes, locked to thread]")
+	assert.Nil(t, err)
+	assert.Equal(t, int64(1), result.ID)
+	assert.Equal(t, "chan receive", result.Status)
+	assert.Equal(t, int64(16), result.WaitSinceMin)
+	assert.Equal(t, true, result.LockedToThread)
 }
