@@ -107,7 +107,7 @@ func ParseHeader(header string) (routine Goroutine, err error) {
 	}
 
 	// Remove []:
-	fullState := header[12+seperator : len(header)-1]
+	fullState := header[12+seperator : len(header)-2]
 	firstComma := strings.Index(fullState, ",")
 	var status string
 	lockedToThread := false

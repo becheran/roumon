@@ -142,7 +142,7 @@ func TestParseLockedToThread(t *testing.T) {
 
 func Benchmark_ParseHeader(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		model.ParseHeader("goroutine 268 [runnable, locked to thread]")
+		model.ParseHeader("goroutine 268 [runnable, locked to thread]:")
 	}
 }
 
@@ -156,20 +156,20 @@ func Test_ParseHeader_Invalid(t *testing.T) {
 }
 
 func Test_ParseHeader_Valid(t *testing.T) {
-	result, err := model.ParseHeader("goroutine 268 [runnable, locked to thread]")
+	result, err := model.ParseHeader("goroutine 268 [runnable, locked to thread]:")
 	assert.Nil(t, err)
 	assert.Equal(t, int64(268), result.ID)
 	assert.Equal(t, "runnable", result.Status)
 	assert.Equal(t, true, result.LockedToThread)
 
-	result, err = model.ParseHeader("goroutine 1 [chan receive, 16 minutes]")
+	result, err = model.ParseHeader("goroutine 1 [chan receive, 16 minutes]:")
 	assert.Nil(t, err)
 	assert.Equal(t, int64(1), result.ID)
 	assert.Equal(t, "chan receive", result.Status)
 	assert.Equal(t, int64(16), result.WaitSinceMin)
 	assert.Equal(t, false, result.LockedToThread)
 
-	result, err = model.ParseHeader("goroutine 1 [chan receive, 16 minutes, locked to thread]")
+	result, err = model.ParseHeader("goroutine 1 [chan receive, 16 minutes, locked to thread]:")
 	assert.Nil(t, err)
 	assert.Equal(t, int64(1), result.ID)
 	assert.Equal(t, "chan receive", result.Status)
