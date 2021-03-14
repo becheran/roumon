@@ -155,7 +155,7 @@ func ParseStackFrame(reader io.Reader) (routines []Goroutine, err error) {
 			continue
 		}
 
-		routine.StackTrace = make([]StackFrame, 0)
+		routine.StackTrace = make([]StackFrame, 0, 8)
 		for scanner.Scan() {
 			traceLine := scanner.Text()
 

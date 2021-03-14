@@ -114,12 +114,6 @@ func TestParseTrace(t *testing.T) {
 	assert.False(t, r3.LockedToThread)
 }
 
-func Benchmark_ParseTrace(b *testing.B) {
-	for n := 0; n < b.N; n++ {
-		model.ParseStackFrame(strings.NewReader(trace_1))
-	}
-}
-
 var trace_2 = `goroutine 268 [runnable, locked to thread]:
 syscall.Syscall9(0x7ff9af9b0500, 0x7, 0x1f4, 0xc0000902d8, 0x1, 0xc0000902c8, 0xc000090348, 0xc000090298, 0x0, 0x0, ...)
 	C:/Program Files/Go/src/runtime/syscall_windows.go:356 +0xf2
@@ -140,12 +134,6 @@ func TestParseLockedToThread(t *testing.T) {
 	assert.True(t, r0.LockedToThread)
 }
 
-func Benchmark_ParseStackPos(b *testing.B) {
-	for n := 0; n < b.N; n++ {
-		model.ParseStackPos("C:/Program Files/Go/src/runtime/syscall_windows.go:356 +0xf2")
-	}
-}
-
 func Test_ParseStackPos_Invalid(t *testing.T) {
 	_, _, _, err := model.ParseStackPos("C:/Program Files/Go/src/runtime/syscall_windows.go:356 f+0xf2")
 	assert.NotNil(t, err)
@@ -159,14 +147,6 @@ func Test_ParseStackPos_Valid(t *testing.T) {
 	assert.Equal(t, "C:/Program Files/Go/src/runtime/syscall_windows.go", fileName)
 	assert.Equal(t, int32(356), line)
 	assert.Equal(t, 0xf2, *pos)
-}
-
-///usr/local/go/src/net/http/server.go:2969 +0x970
-
-func Benchmark_ParseHeader(b *testing.B) {
-	for n := 0; n < b.N; n++ {
-		model.ParseHeader("goroutine 268 [runnable, locked to thread]:")
-	}
 }
 
 func Test_ParseHeader_Invalid(t *testing.T) {
@@ -198,4 +178,22 @@ func Test_ParseHeader_Valid(t *testing.T) {
 	assert.Equal(t, "chan receive", result.Status)
 	assert.Equal(t, int64(16), result.WaitSinceMin)
 	assert.Equal(t, true, result.LockedToThread)
+}
+
+func Benchmark_ParseTrace(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		model.ParseStackFrame(strings.NewReader(trace_1))
+	}
+}
+
+func Benchmark_ParseStackPos(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		model.ParseStackPos("C:/Program Files/Go/src/runtime/syscall_windows.go:356 +0xf2")
+	}
+}
+
+func Benchmark_ParseHeader(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		model.ParseHeader("goroutine 268 [runnable, locked to thread]:")
+	}
 }

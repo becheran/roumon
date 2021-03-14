@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/becheran/roumon/internal/collection"
 	"github.com/becheran/roumon/internal/model"
 	"github.com/gizak/termui/v3/widgets"
 
@@ -13,10 +14,9 @@ import (
 )
 
 const (
-	padding = 1
+	padding         = 1
+	keepRoutineHist = 100
 )
-
-var keepRoutineHist = 100
 
 type UI struct {
 	list           *widgets.List
@@ -155,15 +155,6 @@ func NewUI() *UI {
 	return &ui
 }
 
-func sliceContains(ss []string, subString string) bool {
-	for _, s := range ss {
-		if strings.Contains(s, subString) {
-			return true
-		}
-	}
-	return false
-}
-
 func (ui *UI) updateStatus() {
 	typeCount := make(map[string]float64)
 	for i := 0; i < len(ui.origData); i++ {
@@ -183,7 +174,7 @@ func (ui *UI) updateStatus() {
 	for idx, t := range types {
 		data[idx] = typeCount[t]
 		newLabel := t[:3]
-		if sliceContains(labels, newLabel) {
+		if collection.SliceContains(labels, newLabel) {
 			newLabel = fmt.Sprintf("%s%d", t[:2], uniqueID)
 			uniqueID++
 		}
@@ -213,12 +204,11 @@ func (ui *UI) updateList() {
 		}
 	}
 
-	// TODO: prevent always doing this!
-	routineList := make([]string, len(ui.filteredData))
+	// Update list
+	ui.list.Rows = make([]string, len(ui.filteredData))
 	for i := 0; i < len(ui.filteredData); i++ {
-		routineList[i] = fmt.Sprintf("%05d %s ", ui.filteredData[i].ID, ui.filteredData[i].Status)
+		ui.list.Rows[i] = fmt.Sprintf("%05d %s ", ui.filteredData[i].ID, ui.filteredData[i].Status)
 	}
-	ui.list.Rows = routineList
 
 	if len(ui.filteredData) == 0 {
 		ui.list.SelectedRow = 0
@@ -294,7 +284,11 @@ func (ui *UI) Run(terminate chan<- error, routinesUpdate <-chan []model.Goroutin
 					ui.resize(resized.Width, resized.Height)
 				}
 			case termui.KeyboardEvent:
-				ui.handleKeyEvent(evt.ID, terminate, pollEvents)
+				terminateEvent := ui.handleKeyEvent(evt.ID, pollEvents)
+				if terminateEvent {
+					terminate <- nil
+					return
+				}
 			}
 		case routines := <-routinesUpdate:
 			// History data size cannot be limited in termui. This is a workaround
@@ -313,17 +307,15 @@ func (ui *UI) Run(terminate chan<- error, routinesUpdate <-chan []model.Goroutin
 	}
 }
 
-func (ui *UI) handleKeyEvent(keyID string, terminate chan<- error, pollEvents <-chan termui.Event) {
+func (ui *UI) handleKeyEvent(keyID string, pollEvents <-chan termui.Event) (terminate bool) {
 	switch keyID {
 	case "<C-c>", "<F10>":
-		terminate <- nil
-		return
+		return true
 	case "<F1>":
 		termui.Render(ui.grid, ui.legend, ui.help)
 		e := <-pollEvents
 		if e.ID == "<C-c>" || e.ID == "<F10>" {
-			terminate <- nil
-			return
+			return true
 		}
 		termui.Render(ui.grid, ui.legend)
 	case "<F2>":
@@ -331,8 +323,7 @@ func (ui *UI) handleKeyEvent(keyID string, terminate chan<- error, pollEvents <-
 		termui.Render(ui.grid, ui.legend, ui.paused)
 		e := <-pollEvents
 		if e.ID == "<C-c>" || e.ID == "<F10>" {
-			terminate <- nil
-			return
+			return true
 		}
 		termui.Render(ui.grid, ui.legend)
 	case "<Down>":
@@ -375,4 +366,5 @@ func (ui *UI) handleKeyEvent(keyID string, terminate chan<- error, pollEvents <-
 		}
 		ui.updateList()
 	}
+	return false
 }
