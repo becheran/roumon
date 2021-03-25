@@ -4,6 +4,7 @@
 [![Go Report Card][go-report-image]][go-report-url]
 [![PRs Welcome][pr-welcome-image]][pr-welcome-url]
 [![License][license-image]][license-url]
+[![Go Reference](https://pkg.go.dev/badge/github.com/becheran/roumon.svg)](https://pkg.go.dev/github.com/becheran/roumon)
 
 [license-url]: https://github.com/becheran/roumon/blob/main/LICENSE
 [license-image]: https://img.shields.io/badge/License-MIT-brightgreen.svg
