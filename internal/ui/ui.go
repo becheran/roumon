@@ -18,6 +18,7 @@ const (
 	keepRoutineHist = 100
 )
 
+// UI contains all user interface elements
 type UI struct {
 	list           *widgets.List
 	filter         *widgets.Paragraph
@@ -35,6 +36,7 @@ type UI struct {
 	filteredData []model.Goroutine
 }
 
+// NewUI creates a new console user interface
 func NewUI() *UI {
 	if err := termui.Init(); err != nil {
 		log.Fatalf("Failed to initialize termui: %v", err)
