@@ -25,7 +25,7 @@ type Goroutine struct {
 // StackContains returns true if string is included on one of the elements of the stack slice
 func StackContains(sf []StackFrame, subString string) bool {
 	for _, s := range sf {
-		if strings.Contains(strings.ToLower(s.String()), subString) {
+		if strings.Contains(strings.ToLower(s.String()), strings.ToLower(subString)) {
 			return true
 		}
 	}

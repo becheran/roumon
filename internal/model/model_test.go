@@ -141,6 +141,20 @@ func Test_ParseStackPos_Invalid(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+// StackContains returns true if string is included on one of the elements of the stack slice
+func TestStackContains(t *testing.T) {
+	sf := []model.StackFrame{{
+		FuncName: "Foo",
+		File:     "Bar",
+		Line:     10,
+		Position: nil,
+	}}
+	assert.True(t, model.StackContains(sf, "Foo"))
+	assert.True(t, model.StackContains(sf, "Bar"))
+	assert.True(t, model.StackContains(sf, "10"))
+	assert.False(t, model.StackContains(sf, "12"))
+}
+
 func Test_ParseStackPos_Valid(t *testing.T) {
 	fileName, line, pos, err := model.ParseStackPos("C:/Program Files/Go/src/runtime/syscall_windows.go:356 +0xf2")
 	assert.Nil(t, err)
