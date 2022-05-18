@@ -30,7 +30,7 @@ A go**rou**tine **mon**itor to keep track of active routines from within your fa
 ## Installation
 
 ```sh
-go get github.com/becheran/roumon
+go install github.com/becheran/roumon@latest
 ```
 
 Or download the pre-compiled binaries from the [releases page](https://github.com/becheran/roumon/releases).
