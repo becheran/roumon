@@ -30,10 +30,13 @@ type UI struct {
 	legend         *widgets.Paragraph
 	help           *widgets.Paragraph
 
-	grid         *termui.Grid
-	filtered     bool
-	origData     []model.Goroutine
-	filteredData []model.Goroutine
+	grid          *termui.Grid
+	filtered      bool
+	origData      []model.Goroutine
+	filteredData  []model.Goroutine
+	minGoRoutines int
+	maxGoRoutines int
+	avgGoRoutines float64
 }
 
 // NewUI creates a new console user interface
@@ -53,7 +56,6 @@ func NewUI() *UI {
 	filter.PaddingBottom = padding
 
 	plot := widgets.NewPlot()
-	plot.Title = "History # goroutines"
 	plot.Data = make([][]float64, 1)
 	plot.Data[0] = make([]float64, 2, keepRoutineHist)
 	plot.AxesColor = termui.ColorWhite
@@ -154,7 +156,14 @@ func NewUI() *UI {
 		),
 	)
 
+	ui.updatePlotTitle()
+
 	return &ui
+}
+
+func (ui *UI) updatePlotTitle() {
+	ui.routineHist.Title = fmt.Sprintf("History # goroutines (Min: %d Avg: %0.2f Max: %d)",
+		ui.minGoRoutines, ui.avgGoRoutines, ui.maxGoRoutines)
 }
 
 func (ui *UI) updateStatus() {
@@ -301,6 +310,18 @@ func (ui *UI) Run(terminate chan<- error, routinesUpdate <-chan []model.Goroutin
 			}
 			ui.routineHist.Data[0] = append(ui.routineHist.Data[0], float64(len(routines)))
 
+			if ui.minGoRoutines == 0 || len(routines) < ui.minGoRoutines {
+				ui.minGoRoutines = len(routines)
+			}
+			if len(routines) > ui.maxGoRoutines {
+				ui.maxGoRoutines = len(routines)
+			}
+			if ui.avgGoRoutines > 0 {
+				ui.avgGoRoutines = (ui.avgGoRoutines + float64(len(routines))) / 2.0
+			} else {
+				ui.avgGoRoutines = float64(len(routines))
+			}
+			ui.updatePlotTitle()
 			ui.updateList()
 			ui.updateStatus()
 		}
