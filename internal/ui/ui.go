@@ -74,6 +74,7 @@ func NewUI() *UI {
 	routineList.Rows = []string{}
 	routineList.TextStyle.Fg = termui.ColorGreen
 	routineList.SelectedRowStyle.Fg = termui.ColorWhite
+	routineList.SelectedRowStyle.Bg = termui.ColorGreen
 
 	details := widgets.NewParagraph()
 	details.PaddingTop = padding
