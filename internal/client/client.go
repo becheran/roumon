@@ -37,7 +37,6 @@ func (client *Client) Run(terminate chan<- error, routineUpdate chan<- []model.G
 			terminate <- fmt.Errorf("Failed to list go routines. Err: %s", err.Error())
 			return
 		}
-		defer resp.Body.Close()
 
 		goroutines, err := model.ParseStackFrame(resp.Body)
 		if err != nil {
@@ -45,6 +44,8 @@ func (client *Client) Run(terminate chan<- error, routineUpdate chan<- []model.G
 		} else {
 			routineUpdate <- goroutines
 		}
+
+		resp.Body.Close()
 		<-ticker.C
 	}
 }
