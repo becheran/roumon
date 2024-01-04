@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"runtime/debug"
@@ -42,7 +42,7 @@ func main() {
 		defer f.Close()
 		log.SetOutput(f)
 	} else {
-		log.SetOutput(ioutil.Discard)
+		log.SetOutput(io.Discard)
 	}
 
 	log.Printf("Start roumon (%s)", version)
@@ -61,7 +61,7 @@ func main() {
 
 	if err != nil {
 		fmt.Println(err.Error())
-		log.Printf(err.Error())
+		log.Print(err.Error())
 	}
 
 	log.Print("Stopped")

@@ -50,7 +50,7 @@ func ParseStackPos(text string) (fileName string, line int32, pos *int, err erro
 	text = strings.TrimSpace(text)
 
 	if len(text) == 0 {
-		err = fmt.Errorf("Unexpected empty line")
+		err = fmt.Errorf("unexpected empty line")
 		return
 	}
 
@@ -66,7 +66,7 @@ func ParseStackPos(text string) (fileName string, line int32, pos *int, err erro
 	} else {
 		posInt64, errParse := strconv.ParseInt(text[linePosSep+4:], 16, 64)
 		if errParse != nil {
-			err = fmt.Errorf("Could parse stack pos %s to line int. Error: %s", text, errParse.Error())
+			err = fmt.Errorf("could parse stack pos %s to line int. Error: %s", text, errParse.Error())
 			return
 		}
 		posInt := int(posInt64)
@@ -76,7 +76,7 @@ func ParseStackPos(text string) (fileName string, line int32, pos *int, err erro
 
 	lineInt, errParse := strconv.ParseInt(lineStr, 10, 32)
 	if errParse != nil {
-		err = fmt.Errorf("Could parse line %s to line int. Err: %s", text, errParse.Error())
+		err = fmt.Errorf("could parse line %s to line int. Err: %s", text, errParse.Error())
 		return
 	}
 	line = int32(lineInt)
@@ -87,18 +87,18 @@ func ParseStackPos(text string) (fileName string, line int32, pos *int, err erro
 // ParseHeader of stack trace. See: https://golang.org/src/runtime/traceback.go?s=30186:30213#L869
 func ParseHeader(header string) (routine Goroutine, err error) {
 	if len(header) < 10 {
-		err = fmt.Errorf("Expected header to begin with \"goroutine \" but len was < 10")
+		err = fmt.Errorf("expected header to begin with \"goroutine \" but len was < 10")
 		return
 	}
 	if header[0:10] != "goroutine " {
-		err = fmt.Errorf("Expected goroutine header, but got: %s", header[0:10])
+		err = fmt.Errorf("expected goroutine header, but got: %s", header[0:10])
 		return
 	}
 	seperator := strings.Index(header[10:], " ")
 
 	id, parseErr := strconv.ParseInt(header[10:10+seperator], 10, 64)
 	if parseErr != nil {
-		err = fmt.Errorf("Could not parse ID. Err: %s", parseErr.Error())
+		err = fmt.Errorf("could not parse ID. Err: %s", parseErr.Error())
 		return
 	}
 
@@ -120,7 +120,7 @@ func ParseHeader(header string) (routine Goroutine, err error) {
 				minUnitSep := strings.Index(part, " ")
 				waitTimeMin, parseErr = strconv.ParseInt(part[:minUnitSep], 10, 64)
 				if parseErr != nil {
-					err = fmt.Errorf("Failed to parse minutes. Err: %s", parseErr.Error())
+					err = fmt.Errorf("failed to parse minutes. Err: %s", parseErr.Error())
 					return
 				}
 			}
@@ -165,7 +165,7 @@ func ParseStackFrame(reader io.Reader) (routines []Goroutine, err error) {
 
 			if strings.HasPrefix(traceLine, "created by ") {
 				if !scanner.Scan() {
-					err = fmt.Errorf("Unexpected end of file")
+					log.Println("Unexpected end of file")
 					continue
 				}
 
@@ -182,7 +182,7 @@ func ParseStackFrame(reader io.Reader) (routines []Goroutine, err error) {
 				}
 			} else {
 				if !scanner.Scan() {
-					err = fmt.Errorf("Unexpected end of file")
+					log.Println("Unexpected end of file")
 					continue
 				}
 				file, line, pos, err := ParseStackPos(scanner.Text())
