@@ -3,10 +3,10 @@ package ui
 import (
 	"fmt"
 	"log"
+	"slices"
 	"sort"
 	"strings"
 
-	"github.com/becheran/roumon/internal/collection"
 	"github.com/becheran/roumon/internal/model"
 	"github.com/gizak/termui/v3/widgets"
 
@@ -186,7 +186,7 @@ func (ui *UI) updateStatus() {
 	for idx, t := range types {
 		data[idx] = typeCount[t]
 		newLabel := t[:3]
-		if collection.SliceContains(labels, newLabel) {
+		if slices.Contains(labels, newLabel) {
 			newLabel = fmt.Sprintf("%s%d", t[:2], uniqueID)
 			uniqueID++
 		}
