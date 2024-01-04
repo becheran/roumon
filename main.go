@@ -17,14 +17,21 @@ func main() {
 	var host string
 	var dbgFile string
 	var port int
+	var versionFlag bool
 	flag.StringVar(&host, "host", "localhost", "The pprof server IP or hostname")
 	flag.IntVar(&port, "port", 6060, "The pprof server port")
 	flag.StringVar(&dbgFile, "debug", "", "Path to debug file")
+	flag.BoolVar(&versionFlag, "v", false, "Print version of roumon and exit")
 	flag.Parse()
 
 	version := "dev"
 	if info, ok := debug.ReadBuildInfo(); ok {
 		version = info.Main.Version
+	}
+
+	if versionFlag {
+		fmt.Println(version)
+		return
 	}
 
 	if len(dbgFile) > 0 {
