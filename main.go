@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"runtime/debug"
 
 	"github.com/becheran/roumon/internal/client"
 	"github.com/becheran/roumon/internal/model"
@@ -21,6 +22,11 @@ func main() {
 	flag.StringVar(&dbgFile, "debug", "", "Path to debug file")
 	flag.Parse()
 
+	version := "dev"
+	if info, ok := debug.ReadBuildInfo(); ok {
+		version = info.Main.Version
+	}
+
 	if len(dbgFile) > 0 {
 		f, err := os.OpenFile(dbgFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
@@ -32,7 +38,7 @@ func main() {
 		log.SetOutput(ioutil.Discard)
 	}
 
-	log.Print("Start")
+	log.Printf("Start roumon (%s)", version)
 
 	c := client.NewClient(host, port)
 	ui := ui.NewUI()
