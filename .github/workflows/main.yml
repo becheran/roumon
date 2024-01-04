@@ -28,10 +28,11 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: "1.21"
+          cache: false
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.53
+          version: v1.54
   test-and-release:
     runs-on: ubuntu-latest
     needs: [check-links]
@@ -41,7 +42,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: 1.21
+          go-version: "1.21"
       - name: Test
         run: go test ./...
       - name: Run GoReleaser
