@@ -5,11 +5,11 @@
 [![PRs Welcome][pr-welcome-image]][pr-welcome-url]
 [![License][license-image]][license-url]
 [![Go Reference](https://pkg.go.dev/badge/github.com/becheran/roumon.svg)](https://pkg.go.dev/github.com/becheran/roumon)
-[![Coverage Status](https://coveralls.io/repos/github/becheran/roumon/badge.svg?branch=main)](https://coveralls.io/github/becheran/roumon?branch=main)
+[![Coverage Status](https://s3.amazonaws.com/assets.coveralls.io/badges/coveralls_86.svg)](https://coveralls.io/github/becheran/roumon?branch=main)
 
 [license-url]: https://github.com/becheran/roumon/blob/main/LICENSE
 [license-image]: https://img.shields.io/badge/License-MIT-brightgreen.svg
-[go-report-image]: https://goreportcard.com/badge/github.com/becheran/roumon
+[go-report-image]: https://img.shields.io/badge/go%20report-A+-brightgreen.svg?style=flat
 [go-report-url]: https://goreportcard.com/report/github.com/becheran/roumon
 [pr-welcome-image]: https://img.shields.io/badge/PRs-welcome-brightgreen.svg
 [pr-welcome-url]: https://github.com/becheran/roumon/blob/main/CONTRIBUTING.md
@@ -22,7 +22,7 @@ A go**rou**tine **mon**itor to keep track of active routines from within your fa
 
 * Track live state of all active goroutines
 * Terminal user interface written with [termui](https://github.com/gizak/termui) 🤓
-* Simple to integrate [pprof server](https://golang.org/pkg/net/http/pprof/) for live monitoring
+* Simple to integrate [pprof server](https://pkg.go.dev/net/http/pprof) for live monitoring
 * Dynamic history of goroutine count
 * Full-text filtering
 * Overview of routine states
@@ -41,7 +41,7 @@ Before starting roumon, the go app which shall be monitored needs to be prepared
 
 ### pprof
 
-The program which shall be monitored needs to run a [pprof server](https://golang.org/pkg/net/http/pprof/).
+The program which shall be monitored needs to run a [pprof server](https://pkg.go.dev/net/http/pprof).
 
 Import pprof into you program:
 
