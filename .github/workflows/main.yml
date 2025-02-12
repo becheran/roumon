@@ -44,7 +44,16 @@ jobs:
         with:
           go-version: "1.22"
       - name: Test
-        run: go test ./...
+        run: go test ./... -json > report.json
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: report.json
+      - name: Report
+        uses: becheran/go-testreport@v0.2.1
+        with:
+          input: report.json
   release:
     runs-on: ubuntu-latest
     needs: [check-links, test]
