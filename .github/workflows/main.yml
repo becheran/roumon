@@ -51,7 +51,7 @@ jobs:
           name: test-results
           path: report.json
       - name: Report
-        uses: becheran/go-testreport@v0.2.1
+        uses: becheran/go-testreport@main
         with:
           input: report.json
   release:
