@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: codecov/codecov-action@v1
+      - uses: codecov/codecov-action@v5
   lint:
     name: lint
     runs-on: ubuntu-latest
