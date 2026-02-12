@@ -34,7 +34,7 @@ func (client *Client) Run(terminate chan<- error, routineUpdate chan<- []model.G
 	for {
 		resp, err := client.c.Get(client.server)
 		if err != nil {
-			terminate <- fmt.Errorf("Failed to list go routines. Err: %s", err.Error())
+			terminate <- fmt.Errorf("failed to list go routines. Err: %s", err.Error())
 			return
 		}
 
@@ -45,7 +45,9 @@ func (client *Client) Run(terminate chan<- error, routineUpdate chan<- []model.G
 			routineUpdate <- goroutines
 		}
 
-		resp.Body.Close()
+		if err := resp.Body.Close(); err != nil {
+			log.Printf("Error while closing response body: %s", err.Error())
+		}
 		<-ticker.C
 	}
 }
