@@ -39,7 +39,11 @@ func main() {
 		if err != nil {
 			log.Fatalf("error opening file: %v", err)
 		}
-		defer f.Close()
+		defer func() {
+			if err := f.Close(); err != nil {
+				log.Printf("error closing file: %v", err)
+			}
+		}()
 		log.SetOutput(f)
 	} else {
 		log.SetOutput(io.Discard)
