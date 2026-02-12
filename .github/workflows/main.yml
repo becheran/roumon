@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Markup Link Checker (mlc)
-        uses: becheran/mlc@v0.21.0
+        uses: becheran/mlc@v1.2.0
   coverage:
     runs-on: ubuntu-latest
     steps:
