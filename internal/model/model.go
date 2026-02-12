@@ -94,16 +94,16 @@ func ParseHeader(header string) (routine Goroutine, err error) {
 		err = fmt.Errorf("expected goroutine header, but got: %s", header[0:10])
 		return
 	}
-	seperator := strings.Index(header[10:], " ")
+	separator := strings.Index(header[10:], " ")
 
-	id, parseErr := strconv.ParseInt(header[10:10+seperator], 10, 64)
+	id, parseErr := strconv.ParseInt(header[10:10+separator], 10, 64)
 	if parseErr != nil {
 		err = fmt.Errorf("could not parse ID. Err: %s", parseErr.Error())
 		return
 	}
 
 	// Remove []:
-	fullState := header[12+seperator : len(header)-2]
+	fullState := header[12+separator : len(header)-2]
 	firstComma := strings.Index(fullState, ",")
 	var status string
 	lockedToThread := false
