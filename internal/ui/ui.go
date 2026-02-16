@@ -203,10 +203,10 @@ func (ui *UI) updateStatus() {
 	labels := make([]string, len(types))
 	legend := ""
 	usedAbbrevs := make(map[string]bool)
-	
+
 	for idx, t := range types {
 		data[idx] = typeCount[t]
-		
+
 		// Use predefined abbreviation or fallback to custom logic
 		abbrev, exists := statusAbbreviations[t]
 		if !exists {
@@ -222,7 +222,7 @@ func (ui *UI) updateStatus() {
 			counter++
 		}
 		usedAbbrevs[abbrev] = true
-		
+
 		labels[idx] = abbrev
 		// Add to legend with count
 		legend = fmt.Sprintf("%s%s: %s (%.0f)\n", legend, abbrev, t, typeCount[t])
