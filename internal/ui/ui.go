@@ -17,28 +17,6 @@ const (
 	keepRoutineHist = 100
 )
 
-// statusAbbreviations maps common goroutine status names to consistent abbreviations
-var statusAbbreviations = map[string]string{
-	"running":         "run",
-	"runnable":        "rbl",
-	"waiting":         "wai",
-	"IO wait":         "IO",
-	"chan receive":    "cha",
-	"chan send":       "ch1",
-	"select":          "sel",
-	"sync.Mutex.Lock": "syn",
-	"sync.Cond.Wait":  "syw",
-	"syscall":         "sys",
-	"sleep":           "slp",
-	"idle":            "idl",
-	"dead":            "ded",
-	"copystack":       "cps",
-	"preempted":       "pre",
-	"GC assist wait":  "gca",
-	"GC sweep wait":   "gcs",
-	"GC scavenge wait": "gcv",
-}
-
 // UI contains all user interface elements
 type UI struct {
 	list           *widgets.List
@@ -108,7 +86,7 @@ func NewUI() *UI {
 
 	barchart := widgets.NewBarChart()
 	barchart.Title = "Status"
-	barchart.BarWidth = 3
+	barchart.BarWidth = 5
 	barchart.BarGap = 1
 	barchart.BarColors = []termui.Color{termui.ColorGreen}
 	barchart.LabelStyles = []termui.Style{termui.NewStyle(termui.ColorWhite)}
@@ -202,41 +180,14 @@ func (ui *UI) updateStatus() {
 	data := make([]float64, len(types))
 	labels := make([]string, len(types))
 	legend := ""
-	usedAbbrevs := make(map[string]bool)
-
 	for idx, t := range types {
 		data[idx] = typeCount[t]
-
-		// Use predefined abbreviation or fallback to custom logic
-		abbrev, exists := statusAbbreviations[t]
-		if !exists {
-			// Fallback: use first 3 characters
-			abbrev = t[:min(3, len(t))]
-		}
-		
-		// Handle collisions by adding a number suffix
-		originalAbbrev := abbrev
-		counter := 2
-		for usedAbbrevs[abbrev] {
-			abbrev = fmt.Sprintf("%s%d", originalAbbrev[:min(2, len(originalAbbrev))], counter)
-			counter++
-		}
-		usedAbbrevs[abbrev] = true
-
-		labels[idx] = abbrev
-		// Add to legend with count
-		legend = fmt.Sprintf("%s%s: %s (%.0f)\n", legend, abbrev, t, typeCount[t])
+		labels[idx] = t
+		legend = fmt.Sprintf("%s%s: %.0f\n", legend, t, typeCount[t])
 	}
 	ui.barchart.Data = data
 	ui.barchart.Labels = labels
 	ui.barchartLegend.Text = legend
-}
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }
 
 func (ui *UI) updateList() {
