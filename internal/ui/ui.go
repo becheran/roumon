@@ -3,7 +3,6 @@ package ui
 import (
 	"fmt"
 	"log"
-	"slices"
 	"sort"
 	"strings"
 
@@ -87,10 +86,9 @@ func NewUI() *UI {
 
 	barchart := widgets.NewBarChart()
 	barchart.Title = "Status"
-	barchart.BarWidth = 3
+	barchart.BarWidth = 5
 	barchart.BarGap = 1
 	barchart.BarColors = []termui.Color{termui.ColorGreen}
-	barchart.NumStyles = []termui.Style{termui.NewStyle(termui.ColorBlack)}
 	barchart.LabelStyles = []termui.Style{termui.NewStyle(termui.ColorWhite)}
 	barchart.PaddingTop = padding
 	barchart.PaddingRight = padding
@@ -181,21 +179,15 @@ func (ui *UI) updateStatus() {
 	sort.Strings(types)
 	data := make([]float64, len(types))
 	labels := make([]string, len(types))
-	label := ""
-	uniqueID := 1
+	legend := ""
 	for idx, t := range types {
 		data[idx] = typeCount[t]
-		newLabel := t[:3]
-		if slices.Contains(labels, newLabel) {
-			newLabel = fmt.Sprintf("%s%d", t[:2], uniqueID)
-			uniqueID++
-		}
-		labels[idx] = newLabel
-		label = fmt.Sprintf("%s%s: %s\n", label, newLabel, t)
+		labels[idx] = t
+		legend = fmt.Sprintf("%s%s: %.0f\n", legend, t, typeCount[t])
 	}
 	ui.barchart.Data = data
 	ui.barchart.Labels = labels
-	ui.barchartLegend.Text = label
+	ui.barchartLegend.Text = legend
 }
 
 func (ui *UI) updateList() {
