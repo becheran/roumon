@@ -3,7 +3,6 @@ package ui
 import (
 	"fmt"
 	"log"
-	"slices"
 	"sort"
 	"strings"
 
@@ -20,15 +19,14 @@ const (
 
 // UI contains all user interface elements
 type UI struct {
-	list           *widgets.List
-	filter         *widgets.Paragraph
-	details        *widgets.Paragraph
-	routineHist    *widgets.Plot
-	barchart       *widgets.BarChart
-	barchartLegend *widgets.Paragraph
-	paused         *widgets.Paragraph
-	legend         *widgets.Paragraph
-	help           *widgets.Paragraph
+	list        *widgets.List
+	filter      *widgets.Paragraph
+	details     *widgets.Paragraph
+	routineHist *widgets.Plot
+	status      *widgets.Paragraph
+	paused      *widgets.Paragraph
+	legend      *widgets.Paragraph
+	help        *widgets.Paragraph
 
 	grid          *termui.Grid
 	filtered      bool
@@ -85,26 +83,14 @@ func NewUI() *UI {
 	details.TextStyle = termui.NewStyle(termui.ColorWhite)
 	details.SetRect(0, 0, 60, 10)
 
-	barchart := widgets.NewBarChart()
-	barchart.Title = "Status"
-	barchart.BarWidth = 3
-	barchart.BarGap = 1
-	barchart.BarColors = []termui.Color{termui.ColorGreen}
-	barchart.NumStyles = []termui.Style{termui.NewStyle(termui.ColorBlack)}
-	barchart.LabelStyles = []termui.Style{termui.NewStyle(termui.ColorWhite)}
-	barchart.PaddingTop = padding
-	barchart.PaddingRight = padding
-	barchart.PaddingLeft = padding
-	barchart.PaddingBottom = padding
-	barchart.BorderRight = false
-
-	barchartLabel := widgets.NewParagraph()
-	barchartLabel.BorderLeft = false
-	barchartLabel.PaddingTop = padding
-	barchartLabel.PaddingRight = padding
-	barchartLabel.PaddingLeft = padding
-	barchartLabel.PaddingBottom = padding
-	barchartLabel.Text = ""
+	status := widgets.NewParagraph()
+	status.Title = "Status"
+	status.TextStyle = termui.NewStyle(termui.ColorWhite)
+	status.PaddingTop = padding
+	status.PaddingRight = padding
+	status.PaddingLeft = padding
+	status.PaddingBottom = padding
+	status.Text = ""
 
 	help := widgets.NewParagraph()
 	help.TextStyle.Fg = termui.ColorGreen
@@ -130,23 +116,20 @@ func NewUI() *UI {
 	grid := termui.NewGrid()
 
 	ui := UI{
-		filter:         filter,
-		list:           routineList,
-		details:        details,
-		routineHist:    plot,
-		barchart:       barchart,
-		barchartLegend: barchartLabel,
-		help:           help,
-		paused:         paused,
-		legend:         legend,
-		grid:           grid,
+		filter:      filter,
+		list:        routineList,
+		details:     details,
+		routineHist: plot,
+		status:      status,
+		help:        help,
+		paused:      paused,
+		legend:      legend,
+		grid:        grid,
 	}
 
 	grid.Set(
 		termui.NewRow(3.0/10,
-			termui.NewCol(3.0/10,
-				termui.NewCol(5.0/8, ui.barchart),
-				termui.NewCol(3.0/8, ui.barchartLegend)),
+			termui.NewCol(3.0/10, ui.status),
 			termui.NewCol(7.0/10, ui.routineHist),
 		),
 		termui.NewRow(7.0/10,
@@ -168,10 +151,13 @@ func (ui *UI) updatePlotTitle() {
 }
 
 func (ui *UI) updateStatus() {
-	typeCount := make(map[string]float64)
-	for i := 0; i < len(ui.origData); i++ {
-		num := typeCount[ui.origData[i].Status]
-		typeCount[ui.origData[i].Status] = num + 1
+	ui.status.Text = formatStatusSummary(ui.origData)
+}
+
+func formatStatusSummary(routines []model.Goroutine) string {
+	typeCount := make(map[string]int)
+	for i := 0; i < len(routines); i++ {
+		typeCount[routines[i].Status]++
 	}
 
 	types := make([]string, 0, len(typeCount))
@@ -179,23 +165,16 @@ func (ui *UI) updateStatus() {
 		types = append(types, key)
 	}
 	sort.Strings(types)
-	data := make([]float64, len(types))
-	labels := make([]string, len(types))
-	label := ""
-	uniqueID := 1
-	for idx, t := range types {
-		data[idx] = typeCount[t]
-		newLabel := t[:3]
-		if slices.Contains(labels, newLabel) {
-			newLabel = fmt.Sprintf("%s%d", t[:2], uniqueID)
-			uniqueID++
+
+	var summary strings.Builder
+	for idx, status := range types {
+		if idx > 0 {
+			summary.WriteByte('\n')
 		}
-		labels[idx] = newLabel
-		label = fmt.Sprintf("%s%s: %s\n", label, newLabel, t)
+		summary.WriteString(fmt.Sprintf("%s: %d", status, typeCount[status]))
 	}
-	ui.barchart.Data = data
-	ui.barchart.Labels = labels
-	ui.barchartLegend.Text = label
+
+	return summary.String()
 }
 
 func (ui *UI) updateList() {
